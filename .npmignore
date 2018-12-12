@@ -1,0 +1,7 @@
+docs/
+__tests__/
+.eslint*
+jsdoc.json
+example/
+node_modules/
+tsconfig.json

@@ -1,5 +1,5 @@
-import Resolver from '../index';
-import { ResolveTarget } from '../interface'
+import Resolver from '../libs/resolver';
+import { ResolveTarget } from '../libs/interface'
 
 class ExampleClass implements ResolveTarget {
   supports(type: string) {
