@@ -1,4 +1,6 @@
-import { ResolveTarget } from './interface'
+import { interfaces } from './interface'
+import ResolveTarget = interfaces.ResolveTarget
+
 class Resolver {
   private updater: ResolveTarget[]
   constructor (...args: ResolveTarget[]) {
