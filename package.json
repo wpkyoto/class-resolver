@@ -5,7 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:dev": "jest --watch --silent=false --verbose false --coverage"
   },
   "keywords": [],
   "author": "Hidetaka Okamoto <info@wp-kyoto.net> (https://wp-kyoto.net)",
