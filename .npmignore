@@ -5,3 +5,4 @@ jsdoc.json
 example/
 node_modules/
 tsconfig.json
+coverage/
