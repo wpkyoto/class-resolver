@@ -4,18 +4,18 @@ import { ResolveTarget } from './interface'
  * Chain of Responsibilityパターンを実装するリゾルバークラス
  * 特定のタイプに対応するハンドラーを解決します
  */
-class Resolver {
+class Resolver<TBase extends ResolveTarget = ResolveTarget> {
   /**
    * 登録されたリゾルバーターゲットの配列
    * @private
    */
-  private updaters: ResolveTarget[] = [];
+  private updaters: TBase[] = [];
 
   /**
    * リゾルバーを初期化します
    * @param args 初期リゾルバーターゲット
    */
-  constructor(...args: ResolveTarget[]) {
+  constructor(...args: TBase[]) {
     if (args.length > 0) {
       this.set(args);
     }
@@ -27,7 +27,7 @@ class Resolver {
    * @returns 処理された配列
    * @private
    */
-  private getArgs(args: ResolveTarget[]): ResolveTarget[] {
+  private getArgs(args: TBase[]): TBase[] {
     return [...args];
   }
 
@@ -35,7 +35,7 @@ class Resolver {
    * リゾルバーターゲットを設定します
    * @param updaters リゾルバーターゲットの配列
    */
-  public set(updaters: ResolveTarget[]): void {
+  public set(updaters: TBase[]): void {
     this.updaters = updaters;
   }
 
@@ -43,7 +43,7 @@ class Resolver {
    * リゾルバーターゲットを設定します（可変長引数版）
    * @param args リゾルバーターゲット
    */
-  public setUpdaters(...args: ResolveTarget[]): void {
+  public setUpdaters(...args: TBase[]): void {
     this.set(this.getArgs(args));
   }
 
@@ -51,7 +51,7 @@ class Resolver {
    * リゾルバーターゲットを追加します
    * @param updater 追加するリゾルバーターゲット
    */
-  public addUpdater(updater: ResolveTarget): void {
+  public addUpdater(updater: TBase): void {
     this.updaters.push(updater);
   }
 
@@ -62,7 +62,7 @@ class Resolver {
    * @throws {Error} リゾルバーターゲットが登録されていない場合
    * @throws {Error} 指定されたタイプをサポートするリゾルバーターゲットが見つからない場合
    */
-  public resolve(type: string): ResolveTarget {
+  public resolve(type: string): TBase {
     if (this.updaters.length < 1) {
       throw new Error('Unasigned resolve target.');
     }
