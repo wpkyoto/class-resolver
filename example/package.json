@@ -11,9 +11,9 @@
   "author": "Hidetaka Okamoto <info@wp-kyoto.net> (https://wp-kyoto.net)",
   "license": "ISC",
   "dependencies": {
-    "class-resolver": "^1.0.2"
+    "class-resolver": "file:../"
   },
   "devDependencies": {
-    "typescript": "^3.3.3333"
+    "typescript": "^5.0.0"
   }
 }
