@@ -1,19 +1,19 @@
 import { ResolveTarget } from './interface'
 
 /**
- * Chain of Responsibilityパターンを実装するリゾルバークラス
- * 特定のタイプに対応するハンドラーを解決します
+ * Resolver class implementing the Chain of Responsibility pattern
+ * Resolves handlers for specific types
  */
 class Resolver<TBase extends ResolveTarget = ResolveTarget> {
   /**
-   * 登録されたリゾルバーターゲットの配列
+   * Array of registered resolver targets
    * @private
    */
   private updaters: TBase[] = [];
 
   /**
-   * リゾルバーを初期化します
-   * @param args 初期リゾルバーターゲット
+   * Initializes the resolver
+   * @param args Initial resolver targets
    */
   constructor(...args: TBase[]) {
     if (args.length > 0) {
@@ -22,9 +22,9 @@ class Resolver<TBase extends ResolveTarget = ResolveTarget> {
   }
 
   /**
-   * 引数の配列を処理します
-   * @param args リゾルバーターゲットの配列
-   * @returns 処理された配列
+   * Processes an array of arguments
+   * @param args Array of resolver targets
+   * @returns Processed array
    * @private
    */
   private getArgs(args: TBase[]): TBase[] {
@@ -32,35 +32,35 @@ class Resolver<TBase extends ResolveTarget = ResolveTarget> {
   }
 
   /**
-   * リゾルバーターゲットを設定します
-   * @param updaters リゾルバーターゲットの配列
+   * Sets resolver targets
+   * @param updaters Array of resolver targets
    */
   public set(updaters: TBase[]): void {
     this.updaters = updaters;
   }
 
   /**
-   * リゾルバーターゲットを設定します（可変長引数版）
-   * @param args リゾルバーターゲット
+   * Sets resolver targets (variadic version)
+   * @param args Resolver targets
    */
   public setUpdaters(...args: TBase[]): void {
     this.set(this.getArgs(args));
   }
 
   /**
-   * リゾルバーターゲットを追加します
-   * @param updater 追加するリゾルバーターゲット
+   * Adds a resolver target
+   * @param updater Resolver target to add
    */
   public addUpdater(updater: TBase): void {
     this.updaters.push(updater);
   }
 
   /**
-   * 指定されたタイプに対応するリゾルバーターゲットを解決します
-   * @param type 解決するタイプ
-   * @returns 解決されたリゾルバーターゲット
-   * @throws {Error} リゾルバーターゲットが登録されていない場合
-   * @throws {Error} 指定されたタイプをサポートするリゾルバーターゲットが見つからない場合
+   * Resolves a resolver target for the specified type
+   * @param type Type to resolve
+   * @returns Resolved resolver target
+   * @throws {Error} When no resolver targets are registered
+   * @throws {Error} When no resolver target supporting the specified type is found
    */
   public resolve(type: string): TBase {
     if (this.updaters.length < 1) {

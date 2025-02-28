@@ -1,23 +1,23 @@
 # Class Resolver Example
 
-このディレクトリには、class-resolverライブラリの使用例が含まれています。
+This directory contains examples of using the class-resolver library.
 
-## セットアップ
+## Setup
 
 ```bash
-# 依存関係をインストール
+# Install dependencies
 npm install
 
-# ビルドを実行
+# Run build
 npm run build
 
-# テストを実行
+# Run tests
 npm test
 ```
 
 ## JavaScript Example
 
-`index.js`ファイルには、JavaScriptでの基本的な使用例が含まれています。
+The `index.js` file contains basic usage examples in JavaScript.
 
 ```bash
 node index.js
@@ -25,20 +25,20 @@ node index.js
 
 ## TypeScript Example
 
-`libs/index.ts`ファイルには、TypeScriptでの使用例が含まれています。v2.0.0からはジェネリクスをサポートしており、型安全性が向上しています。
+The `libs/index.ts` file contains examples of using TypeScript. From v2.0.0, it supports generics for improved type safety.
 
-### v2.0.0の新機能
+### New Features in v2.0.0
 
-- ジェネリクスによる型安全性の向上
-- `ResolveTarget<TArgs, TReturn>`インターフェースで引数と戻り値の型を指定可能
-- `Resolver<TBase>`クラスで扱うターゲットの型を指定可能
+- Improved type safety with generics
+- `ResolveTarget<TArgs, TReturn>` interface allows specifying argument and return value types
+- `Resolver<TBase>` class allows specifying the type of targets to handle
 
-### TypeScriptの例
+### TypeScript Example
 
 ```typescript
 import Resolver, { ResolveTarget } from 'class-resolver';
 
-// ジェネリクスを使用して引数と戻り値の型を指定
+// Using generics to specify argument and return value types
 class StringFormatter implements ResolveTarget<[string], string> {
   supports(type: string): boolean {
     return type === 'string-format';
@@ -49,19 +49,19 @@ class StringFormatter implements ResolveTarget<[string], string> {
   }
 }
 
-// Resolverにも型パラメータを指定
+// Specifying type parameters for Resolver as well
 const resolver = new Resolver<ResolveTarget<[string], string>>(new StringFormatter());
 const formatter = resolver.resolve('string-format');
 const result = formatter.handle('hello'); // result is typed as string
 console.log(result); // "HELLO"
 ```
 
-## 注意点
+## Notes
 
-- JavaScriptユーザーは変更なしで既存のコードを使用できます
-- TypeScriptユーザーは型安全性を向上させるためにジェネリクスを活用できます
+- JavaScript users can continue to use existing code without changes
+- TypeScript users can leverage generics to improve type safety
 
-## テスト結果
+## Test Results
 
 ```bash
 $ npm test

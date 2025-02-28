@@ -1,6 +1,6 @@
 import Resolver, { ResolveTarget } from '../../dist/index'
 
-// ジェネリクスを使用して戻り値の型を指定
+// Using generics to specify return value type
 class Test implements ResolveTarget<[], string> {
   supports(str: string): boolean {
     return false
@@ -10,7 +10,7 @@ class Test implements ResolveTarget<[], string> {
   }
 }
 
-// ジェネリクスを使用して戻り値の型を指定
+// Using generics to specify return value type
 class Test2 implements ResolveTarget<[], string> {
   supports(str: string): boolean {
     return true
@@ -20,13 +20,13 @@ class Test2 implements ResolveTarget<[], string> {
   }
 }
 
-// Resolverにも型パラメータを指定
+// Specifying type parameters for Resolver
 const r = new Resolver<ResolveTarget<[], string>>(
   new Test(),
   new Test2()
 )
 
 const t = r.resolve('test')
-// 型安全な戻り値
+// Type-safe return value
 const result: string = t.handle()
 console.log(result)
