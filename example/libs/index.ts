@@ -1,26 +1,32 @@
-import Resolver, {interfaces} from '../../dist/index'
-import ResolveTarget = interfaces.ResolveTarget
+import Resolver, { ResolveTarget } from '../../dist/index'
 
-class test implements ResolveTarget {
-  supports(str: string) {
+// Using generics to specify return value type
+class Test implements ResolveTarget<[], string> {
+  supports(str: string): boolean {
     return false
   }
-  handle() {
+  handle(): string {
     return 'test'
   }
 }
-class test2 implements ResolveTarget {
-  supports(str: string) {
+
+// Using generics to specify return value type
+class Test2 implements ResolveTarget<[], string> {
+  supports(str: string): boolean {
     return true
   }
-  handle() {
+  handle(): string {
     return 'test2'
   }
 }
 
-const r = new Resolver(
-  new test(),
-  new test2()
+// Specifying type parameters for Resolver
+const r = new Resolver<ResolveTarget<[], string>>(
+  new Test(),
+  new Test2()
 )
+
 const t = r.resolve('test')
-console.log(t.handle())
+// Type-safe return value
+const result: string = t.handle()
+console.log(result)

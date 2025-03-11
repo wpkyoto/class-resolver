@@ -1,3 +1,5 @@
-const Resolver = require('./libs/resolver')
+'use strict';
 
-module.exports = Resolver.default || Resolver
+const Resolver = require('./dist/index');
+
+module.exports = Resolver.default || Resolver;
