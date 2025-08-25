@@ -10,6 +10,8 @@ A lightweight TypeScript/JavaScript library for implementing the Chain of Respon
 - Support for multiple resolvers with different handling logic
 - Clear error handling for unsupported types
 - Generic type support for better type safety
+- **Fallback handler support for graceful handling of unsupported types**
+- **Method chaining support for fluent API usage**
 
 ## Installation
 
@@ -53,6 +55,27 @@ try {
 } catch (e) {
   console.log(e) // Error: Unsupported type: xxx
 }
+```
+
+## Fallback Handler Usage
+
+The fallback handler allows you to gracefully handle unsupported types without throwing errors:
+
+```typescript
+const resolver = new Resolver(new ExampleClass(), new ExampleClass2())
+
+// Set a fallback handler for unsupported types
+resolver.setFallbackHandler((type) => {
+  return `Fallback: ${type}`
+})
+
+// Now unsupported types will use the fallback handler instead of throwing errors
+const result = resolver.resolve('xxx')
+console.log(result.handle('xxx')) // Output: Fallback: xxx
+
+// Supported types still work normally
+const c = resolver.resolve('hoge')
+console.log(c.handle()) // Output: hoge
 ```
 
 ## Advanced Usage
@@ -111,6 +134,33 @@ resolver.setUpdaters(new MessageFormatter(), new ErrorFormatter())
 // Or add them one by one
 resolver.addUpdater(new MessageFormatter())
 resolver.addUpdater(new ErrorFormatter())
+```
+
+### Fallback Handler with TypeScript
+
+The fallback handler maintains full type safety and automatically infers types from your resolver configuration:
+
+```typescript
+// Create a resolver with specific types
+const resolver = new Resolver<ResolveTarget<[string, number], string>>(
+  new MessageFormatter()
+)
+
+// Set a fallback handler with the same type signature
+resolver.setFallbackHandler((name: string, count: number): string => {
+  return `Default greeting for ${name} (message #${count})`
+})
+
+// The fallback handler will be used for unsupported types
+const result = resolver.resolve('unknown').handle('John', 5)
+console.log(result) // Output: Default greeting for John (message #5)
+
+// Method chaining is also supported
+resolver
+  .setFallbackHandler((name: string, count: number): string => {
+    return `Custom fallback: ${name} - ${count}`
+  })
+  .addUpdater(new ErrorFormatter())
 ```
 
 ## Generic Type Support
@@ -209,12 +259,35 @@ This advanced type support allows you to:
 3. **Request Processing**: Process different types of requests with dedicated handlers
 4. **Plugin System**: Implement a plugin system where different plugins handle specific types of operations
 5. **Message Formatting**: Format different types of messages with specific formatters
+6. **Graceful Degradation**: Use fallback handlers to provide default behavior for unknown types
+7. **API Versioning**: Handle different API versions with fallback to backward-compatible behavior
+8. **Feature Flags**: Implement feature flags with fallback to basic functionality
 
 ## Error Handling
 
 The resolver will throw errors in the following cases:
 - When no resolvers are registered: `"Unasigned resolve target."`
 - When trying to resolve an unsupported type: `"Unsupported type: xxx"`
+
+### Fallback Handler for Error Prevention
+
+With the fallback handler, you can prevent errors for unsupported types:
+
+```typescript
+const resolver = new Resolver(new ExampleClass())
+
+// Without fallback handler - throws error
+try {
+  resolver.resolve('unknown')
+} catch (e) {
+  console.log(e) // Error: Unsupported type: unknown
+}
+
+// With fallback handler - no error thrown
+resolver.setFallbackHandler((type) => `Default: ${type}`)
+const result = resolver.resolve('unknown') // No error, uses fallback
+console.log(result.handle('unknown')) // Output: Default: unknown
+```
 
 ## Upgrade Guide
 

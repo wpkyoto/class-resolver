@@ -12,6 +12,12 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
   private updaters: TBase[] = [];
 
   /**
+   * Fallback handler function
+   * @private
+   */
+  private fallbackHandler?: (...args: Parameters<TBase['handle']>) => ReturnType<TBase['handle']>;
+
+  /**
    * Initializes the resolver
    * @param args Initial resolver targets
    */
@@ -51,8 +57,21 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
    * Adds a resolver target
    * @param updater Resolver target to add
    */
-  public addUpdater(updater: TBase): void {
+  public addUpdater(updater: TBase): this {
     this.updaters.push(updater);
+    return this;
+  }
+
+  /**
+   * Sets a fallback handler for unsupported types
+   * @param handler Fallback handler function
+   * @returns This resolver instance for method chaining
+   */
+  public setFallbackHandler(
+    handler: (...args: Parameters<TBase['handle']>) => ReturnType<TBase['handle']>
+  ): this {
+    this.fallbackHandler = handler;
+    return this;
   }
 
   /**
@@ -60,7 +79,7 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
    * @param type Type to resolve
    * @returns Resolved resolver target
    * @throws {Error} When no resolver targets are registered
-   * @throws {Error} When no resolver target supporting the specified type is found
+   * @throws {Error} When no resolver target supporting the specified type is found and no fallback is set
    */
   public resolve(type: TType): TBase {
     if (this.updaters.length < 1) {
@@ -70,6 +89,14 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
     const target = this.updaters.find(updater => updater.supports(type));
     
     if (!target) {
+      // If fallback handler is set, create a temporary target that uses it
+      if (this.fallbackHandler) {
+        return {
+          supports: () => true,
+          handle: this.fallbackHandler
+        } as unknown as TBase;
+      }
+      
       // Determine the string representation of the unsupported type
       // If it's a non-null object, use JSON.stringify for detailed output
       // Otherwise, use String() for basic conversion
