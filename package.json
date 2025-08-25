@@ -1,6 +1,6 @@
 {
   "name": "class-resolver",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Simple class resolver.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -32,7 +32,12 @@
       "js"
     ],
     "transform": {
-      "^.+\\.(ts|tsx)$": ["ts-jest", { "tsconfig": "tsconfig.json" }]
+      "^.+\\.(ts|tsx)$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json"
+        }
+      ]
     },
     "testMatch": [
       "**/__tests__/*.+(ts|tsx|js)"
