@@ -64,13 +64,17 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
    */
   public resolve(type: TType): TBase {
     if (this.updaters.length < 1) {
-      throw new Error('Unasigned resolve target.');
+      throw new Error('Unassigned resolve target.');
     }
     
     const target = this.updaters.find(updater => updater.supports(type));
     
     if (!target) {
-      throw new Error(`Unsupported type: ${type}`);
+      // Determine the string representation of the unsupported type
+      // If it's a non-null object, use JSON.stringify for detailed output
+      // Otherwise, use String() for basic conversion
+      const typeString = typeof type === 'object' && type !== null ? JSON.stringify(type) : String(type);
+      throw new Error(`Unsupported type: ${typeString}`);
     }
     
     return target;

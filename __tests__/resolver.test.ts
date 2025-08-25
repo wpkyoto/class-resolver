@@ -65,7 +65,7 @@ describe('constructor', () => {
   })
   it('should throw error when unregistered', () => {
     const resolver = new Resolver<ResolveTarget<[], string>>()
-    expect(() => resolver.resolve('hoge')).toThrow('Unasigned resolve target.')
+    expect(() => resolver.resolve('hoge')).toThrow('Unassigned resolve target.')
   })
   it('should throw error when given unsupported type', () => {
     const resolver = new Resolver<ResolveTarget<[], string>>(new ExampleClass())
@@ -133,7 +133,7 @@ describe('Stripe Event handling with complex types', () => {
       }
     }
     
-    expect(() => resolver.resolve(unsupportedEvent)).toThrow('Unsupported type: [object Object]')
+    expect(() => resolver.resolve(unsupportedEvent)).toThrow('Unsupported type: {"id":"evt_789","type":"customer.created","data":{"object":{"id":"cus_789","amount":0}}}')
   })
 })
 
