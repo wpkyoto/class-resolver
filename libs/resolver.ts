@@ -4,7 +4,7 @@ import { ResolveTarget } from './interface'
  * Resolver class implementing the Chain of Responsibility pattern
  * Resolves handlers for specific types
  */
-class Resolver<TBase extends ResolveTarget = ResolveTarget> {
+class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[], any, any>, TType = string> {
   /**
    * Array of registered resolver targets
    * @private
@@ -62,7 +62,7 @@ class Resolver<TBase extends ResolveTarget = ResolveTarget> {
    * @throws {Error} When no resolver targets are registered
    * @throws {Error} When no resolver target supporting the specified type is found
    */
-  public resolve(type: string): TBase {
+  public resolve(type: TType): TBase {
     if (this.updaters.length < 1) {
       throw new Error('Unasigned resolve target.');
     }

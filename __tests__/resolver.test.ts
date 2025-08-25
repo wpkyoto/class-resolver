@@ -18,6 +18,38 @@ class ExampleClass2 implements ResolveTarget<[], string> {
   }
 }
 
+// StripeのEventデータのような複雑な型を扱うテスト用クラス
+interface StripeEvent {
+  id: string;
+  type: string;
+  data: {
+    object: {
+      id: string;
+      amount: number;
+    };
+  };
+}
+
+class StripeEventHandler implements ResolveTarget<[StripeEvent], string, StripeEvent> {
+  supports(event: StripeEvent): boolean {
+    return event.type === 'payment_intent.succeeded'
+  }
+  
+  handle(event: StripeEvent): string {
+    return `Payment succeeded: ${event.data.object.amount}`
+  }
+}
+
+class StripeRefundHandler implements ResolveTarget<[StripeEvent], string, StripeEvent> {
+  supports(event: StripeEvent): boolean {
+    return event.type === 'charge.refunded'
+  }
+  
+  handle(event: StripeEvent): string {
+    return `Refund processed: ${event.data.object.amount}`
+  }
+}
+
 describe('constructor', () => {
   it('should resolved', () => {
     const resolver = new Resolver<ResolveTarget<[], string>>(new ExampleClass(), new ExampleClass2())
@@ -40,6 +72,71 @@ describe('constructor', () => {
     expect(() => resolver.resolve('fuga')).toThrow('Unsupported type: fuga')
   })
 })
+
+describe('Stripe Event handling with complex types', () => {
+  it('should handle Stripe payment events', () => {
+    const resolver = new Resolver<ResolveTarget<[StripeEvent], string, StripeEvent>, StripeEvent>(
+      new StripeEventHandler(),
+      new StripeRefundHandler()
+    )
+    
+    const paymentEvent: StripeEvent = {
+      id: 'evt_123',
+      type: 'payment_intent.succeeded',
+      data: {
+        object: {
+          id: 'pi_123',
+          amount: 1000
+        }
+      }
+    }
+    
+    const handler = resolver.resolve(paymentEvent)
+    expect(handler.handle(paymentEvent)).toBe('Payment succeeded: 1000')
+  })
+  
+  it('should handle Stripe refund events', () => {
+    const resolver = new Resolver<ResolveTarget<[StripeEvent], string, StripeEvent>, StripeEvent>(
+      new StripeEventHandler(),
+      new StripeRefundHandler()
+    )
+    
+    const refundEvent: StripeEvent = {
+      id: 'evt_456',
+      type: 'charge.refunded',
+      data: {
+        object: {
+          id: 'ch_456',
+          amount: 500
+        }
+      }
+    }
+    
+    const handler = resolver.resolve(refundEvent)
+    expect(handler.handle(refundEvent)).toBe('Refund processed: 500')
+  })
+  
+  it('should throw error for unsupported Stripe event type', () => {
+    const resolver = new Resolver<ResolveTarget<[StripeEvent], string, StripeEvent>, StripeEvent>(
+      new StripeEventHandler(),
+      new StripeRefundHandler()
+    )
+    
+    const unsupportedEvent: StripeEvent = {
+      id: 'evt_789',
+      type: 'customer.created',
+      data: {
+        object: {
+          id: 'cus_789',
+          amount: 0
+        }
+      }
+    }
+    
+    expect(() => resolver.resolve(unsupportedEvent)).toThrow('Unsupported type: [object Object]')
+  })
+})
+
 describe('setUpdater()', () => {
   it('should resolved', () => {
     const resolver = new Resolver<ResolveTarget<[], string>>()
