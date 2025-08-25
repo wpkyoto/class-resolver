@@ -119,8 +119,8 @@ From version 2.0.0, class-resolver supports generic types for better type safety
 
 ```typescript
 // Define the interface with generics
-interface ResolveTarget<TArgs extends any[] = any[], TReturn = any> {
-  supports(type: string): boolean;
+interface ResolveTarget<TArgs extends any[] = any[], TReturn = any, TType = string> {
+  supports(type: TType): boolean;
   handle(...args: TArgs): TReturn;
 }
 
@@ -140,6 +140,67 @@ const resolver = new Resolver<ResolveTarget<[string], string>>(new StringFormatt
 const formatter = resolver.resolve('string-format');
 const result = formatter.handle('hello'); // result is typed as string
 ```
+
+### Advanced Type Support
+
+You can now use any type for the `supports` method, not just strings. This is particularly useful for handling complex objects like Stripe events:
+
+```typescript
+// Define a complex event type
+interface StripeEvent {
+  id: string;
+  type: string;
+  data: {
+    object: {
+      id: string;
+      amount: number;
+    };
+  };
+}
+
+// Create handlers for specific event types
+class PaymentEventHandler implements ResolveTarget<[StripeEvent], string, StripeEvent> {
+  supports(event: StripeEvent): boolean {
+    return event.type === 'payment_intent.succeeded';
+  }
+  
+  handle(event: StripeEvent): string {
+    return `Payment succeeded: ${event.data.object.amount}`;
+  }
+}
+
+class RefundEventHandler implements ResolveTarget<[StripeEvent], string, StripeEvent> {
+  supports(event: StripeEvent): boolean {
+    return event.type === 'charge.refunded';
+  }
+  
+  handle(event: StripeEvent): string {
+    return `Refund processed: ${event.data.object.amount}`;
+  }
+}
+
+// Create a resolver that handles StripeEvent types
+const resolver = new Resolver<ResolveTarget<[StripeEvent], string, StripeEvent>, StripeEvent>(
+  new PaymentEventHandler(),
+  new RefundEventHandler()
+);
+
+// Handle different event types
+const paymentEvent: StripeEvent = {
+  id: 'evt_123',
+  type: 'payment_intent.succeeded',
+  data: { object: { id: 'pi_123', amount: 1000 } }
+};
+
+const handler = resolver.resolve(paymentEvent);
+console.log(handler.handle(paymentEvent)); // Output: Payment succeeded: 1000
+```
+
+This advanced type support allows you to:
+- Use complex objects as type identifiers instead of simple strings
+- Maintain full type safety throughout the resolution process
+- Handle domain-specific objects like Stripe events, database records, or custom business objects
+- Create more expressive and type-safe event handling systems
 
 ## Use Cases
 
@@ -172,8 +233,8 @@ Version 2.0.0 introduces generic type support for better type safety. This chang
    }
    
    // After (2.0.0)
-   interface ResolveTarget<TArgs extends any[] = any[], TReturn = any> {
-     supports(type: string): boolean;
+   interface ResolveTarget<TArgs extends any[] = any[], TReturn = any, TType = string> {
+     supports(type: TType): boolean;
      handle(...args: TArgs): TReturn;
    }
    ```
@@ -186,8 +247,27 @@ Version 2.0.0 introduces generic type support for better type safety. This chang
    }
    
    // After (2.0.0)
-   class Resolver<TBase extends ResolveTarget = ResolveTarget> {
+   class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[], any, any>, TType = string> {
      // ...
+   }
+   ```
+
+3. **New in 2.0.0**: You can now specify custom types for the `supports` method:
+   ```typescript
+   // Use custom types instead of strings
+   interface CustomEvent {
+     type: string;
+     data: any;
+   }
+   
+   class CustomHandler implements ResolveTarget<[CustomEvent], string, CustomEvent> {
+     supports(event: CustomEvent): boolean {
+       return event.type === 'custom-type';
+     }
+     
+     handle(event: CustomEvent): string {
+       return `Handled: ${event.type}`;
+     }
    }
    ```
 
