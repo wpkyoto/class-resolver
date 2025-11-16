@@ -1,10 +1,13 @@
-import { ResolveTarget } from './interface'
+import type { ResolveTarget } from './interface';
 
 /**
  * Resolver class implementing the Chain of Responsibility pattern
  * Resolves handlers for specific types
  */
-class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[], any, any>, TType = string> {
+class Resolver<
+  TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[], any, any>,
+  TType = string,
+> {
   /**
    * Array of registered resolver targets
    * @private
@@ -85,25 +88,26 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
     if (this.updaters.length < 1) {
       throw new Error('Unassigned resolve target.');
     }
-    
-    const target = this.updaters.find(updater => updater.supports(type));
-    
+
+    const target = this.updaters.find((updater) => updater.supports(type));
+
     if (!target) {
       // If fallback handler is set, create a temporary target that uses it
       if (this.fallbackHandler) {
         return {
           supports: () => true,
-          handle: this.fallbackHandler
+          handle: this.fallbackHandler,
         } as unknown as TBase;
       }
-      
+
       // Determine the string representation of the unsupported type
       // If it's a non-null object, use JSON.stringify for detailed output
       // Otherwise, use String() for basic conversion
-      const typeString = typeof type === 'object' && type !== null ? JSON.stringify(type) : String(type);
+      const typeString =
+        typeof type === 'object' && type !== null ? JSON.stringify(type) : String(type);
       throw new Error(`Unsupported type: ${typeString}`);
     }
-    
+
     return target;
   }
 }
