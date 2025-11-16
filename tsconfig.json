@@ -14,7 +14,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "noEmit": false,
+    "noEmit": true,
 
     /* Interop Constraints */
     "allowSyntheticDefaultImports": true,
