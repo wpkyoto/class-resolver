@@ -140,7 +140,9 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
   /**
    * Resolves all resolver targets for the specified type
    * @param type Type to resolve
-   * @returns Array of all matching resolver targets sorted by priority (highest first)
+   * @returns Array of all matching resolver targets sorted by priority (highest first).
+   *          Returns an empty array if no handlers match and no fallback is set.
+   *          Note: Unlike resolve(), this method does not throw when no handlers match.
    * @throws {Error} When no resolver targets are registered
    */
   public resolveAll(type: TType): TBase[] {

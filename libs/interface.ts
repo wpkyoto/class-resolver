@@ -20,7 +20,7 @@ export interface HasPriority {
    * Priority for this handler (higher values execute first)
    * Default is 0 if not specified
    */
-  priority: number
+  priority?: number
 }
 
 /**
@@ -68,7 +68,7 @@ export namespace interfaces {
   }
 
   export interface PrioritizedResolveTarget<TArgs extends any[] = any[], TReturn = any, TType = string> extends ResolveTarget<TArgs, TReturn, TType> {
-    priority: number
+    priority?: number
   }
 
   export interface AsyncResolveTarget<TArgs extends any[] = any[], TReturn = any, TType = string> {
@@ -77,6 +77,6 @@ export namespace interfaces {
   }
 
   export interface PrioritizedAsyncResolveTarget<TArgs extends any[] = any[], TReturn = any, TType = string> extends AsyncResolveTarget<TArgs, TReturn, TType> {
-    priority: number
+    priority?: number
   }
 }

@@ -516,7 +516,7 @@ const results = await resolver.handleAllAsync('order', { id: 123, amount: 1000 }
 ## Error Handling
 
 The resolver will throw errors in the following cases:
-- When no resolvers are registered: `"Unasigned resolve target."`
+- When no resolvers are registered: `"Unassigned resolve target."`
 - When trying to resolve an unsupported type: `"Unsupported type: xxx"`
 
 ### Fallback Handler for Error Prevention
