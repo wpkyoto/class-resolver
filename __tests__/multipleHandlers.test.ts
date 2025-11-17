@@ -1,5 +1,5 @@
+import type { ResolveTarget } from '../libs/interface';
 import Resolver from '../libs/resolver';
-import { ResolveTarget } from '../libs/interface';
 
 // Stripe webhook のような実際のユースケースを想定
 interface StripeEvent {
@@ -71,9 +71,9 @@ describe('Multiple Handlers - resolveAll()', () => {
       data: {
         object: {
           id: 'pi_123',
-          amount: 1000
-        }
-      }
+          amount: 1000,
+        },
+      },
     };
 
     const handlers = resolver.resolveAll(paymentEvent);
@@ -92,9 +92,9 @@ describe('Multiple Handlers - resolveAll()', () => {
       data: {
         object: {
           id: 'cus_123',
-          amount: 0
-        }
-      }
+          amount: 0,
+        },
+      },
     };
 
     const handlers = resolver.resolveAll(unsupportedEvent);
@@ -113,9 +113,9 @@ describe('Multiple Handlers - resolveAll()', () => {
       data: {
         object: {
           id: 'ch_123',
-          amount: 500
-        }
-      }
+          amount: 500,
+        },
+      },
     };
 
     const handlers = resolver.resolveAll(refundEvent);
@@ -131,9 +131,9 @@ describe('Multiple Handlers - resolveAll()', () => {
       data: {
         object: {
           id: 'pi_999',
-          amount: 100
-        }
-      }
+          amount: 100,
+        },
+      },
     };
 
     expect(() => resolver.resolveAll(event)).toThrow('Unassigned resolve target.');
@@ -154,9 +154,9 @@ describe('Multiple Handlers - handleAll()', () => {
       data: {
         object: {
           id: 'pi_123',
-          amount: 1000
-        }
-      }
+          amount: 1000,
+        },
+      },
     };
 
     const results = resolver.handleAll(paymentEvent, paymentEvent);
@@ -178,9 +178,9 @@ describe('Multiple Handlers - handleAll()', () => {
       data: {
         object: {
           id: 'cus_123',
-          amount: 0
-        }
-      }
+          amount: 0,
+        },
+      },
     };
 
     const results = resolver.handleAll(unsupportedEvent, unsupportedEvent);
@@ -200,9 +200,9 @@ describe('Multiple Handlers - handleAll()', () => {
       data: {
         object: {
           id: 'pi_123',
-          amount: 1000
-        }
-      }
+          amount: 1000,
+        },
+      },
     };
 
     const refundEvent: StripeEvent = {
@@ -211,9 +211,9 @@ describe('Multiple Handlers - handleAll()', () => {
       data: {
         object: {
           id: 'ch_123',
-          amount: 500
-        }
-      }
+          amount: 500,
+        },
+      },
     };
 
     const paymentResults = resolver.handleAll(paymentEvent, paymentEvent);
@@ -241,14 +241,16 @@ describe('Multiple Handlers with Fallback', () => {
       data: {
         object: {
           id: 'cus_123',
-          amount: 0
-        }
-      }
+          amount: 0,
+        },
+      },
     };
 
     const handlers = resolver.resolveAll(unsupportedEvent);
     expect(handlers).toHaveLength(1);
-    expect(handlers[0].handle(unsupportedEvent)).toBe('Fallback: Unhandled event type customer.created');
+    expect(handlers[0].handle(unsupportedEvent)).toBe(
+      'Fallback: Unhandled event type customer.created'
+    );
   });
 
   it('should prefer registered handlers over fallback', () => {
@@ -258,7 +260,7 @@ describe('Multiple Handlers with Fallback', () => {
     );
 
     resolver.setFallbackHandler(() => {
-      return `Fallback: Should not be called`;
+      return 'Fallback: Should not be called';
     });
 
     const paymentEvent: StripeEvent = {
@@ -267,9 +269,9 @@ describe('Multiple Handlers with Fallback', () => {
       data: {
         object: {
           id: 'pi_123',
-          amount: 1000
-        }
-      }
+          amount: 1000,
+        },
+      },
     };
 
     const handlers = resolver.resolveAll(paymentEvent);

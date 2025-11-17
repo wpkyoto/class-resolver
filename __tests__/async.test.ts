@@ -1,5 +1,5 @@
+import type { AsyncResolveTarget, PrioritizedAsyncResolveTarget } from '../libs/interface';
 import Resolver from '../libs/resolver';
-import { AsyncResolveTarget, PrioritizedAsyncResolveTarget } from '../libs/interface';
 
 interface PaymentEvent {
   type: string;
@@ -15,7 +15,7 @@ class SaveToDBHandler implements AsyncResolveTarget<[PaymentEvent], string, Paym
 
   async handle(event: PaymentEvent): Promise<string> {
     // DBへの保存をシミュレート
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
     return `DB: Saved payment ${event.amount} for customer ${event.customerId}`;
   }
 }
@@ -28,7 +28,7 @@ class SendWebhookHandler implements AsyncResolveTarget<[PaymentEvent], string, P
 
   async handle(event: PaymentEvent): Promise<string> {
     // 外部APIへのwebhookをシミュレート
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     return `Webhook: Sent notification for payment ${event.amount}`;
   }
 }
@@ -41,13 +41,15 @@ class SendEmailHandler implements AsyncResolveTarget<[PaymentEvent], string, Pay
 
   async handle(event: PaymentEvent): Promise<string> {
     // メール送信をシミュレート
-    await new Promise(resolve => setTimeout(resolve, 15));
+    await new Promise((resolve) => setTimeout(resolve, 15));
     return `Email: Sent receipt to customer ${event.customerId}`;
   }
 }
 
 // 優先度付き非同期ハンドラー
-class ValidationHandler implements PrioritizedAsyncResolveTarget<[PaymentEvent], boolean, PaymentEvent> {
+class ValidationHandler
+  implements PrioritizedAsyncResolveTarget<[PaymentEvent], boolean, PaymentEvent>
+{
   priority = 100;
 
   supports(event: PaymentEvent): boolean {
@@ -56,12 +58,14 @@ class ValidationHandler implements PrioritizedAsyncResolveTarget<[PaymentEvent],
 
   async handle(event: PaymentEvent): Promise<boolean> {
     // バリデーションをシミュレート
-    await new Promise(resolve => setTimeout(resolve, 5));
+    await new Promise((resolve) => setTimeout(resolve, 5));
     return event.amount > 0;
   }
 }
 
-class ProcessPaymentHandler implements PrioritizedAsyncResolveTarget<[PaymentEvent], string, PaymentEvent> {
+class ProcessPaymentHandler
+  implements PrioritizedAsyncResolveTarget<[PaymentEvent], string, PaymentEvent>
+{
   priority = 50;
 
   supports(event: PaymentEvent): boolean {
@@ -69,23 +73,22 @@ class ProcessPaymentHandler implements PrioritizedAsyncResolveTarget<[PaymentEve
   }
 
   async handle(event: PaymentEvent): Promise<string> {
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
     return `Processed payment ${event.amount}`;
   }
 }
 
 describe('Async Handler Resolution - handleAllAsync()', () => {
   it('should execute all async handlers in parallel and return results', async () => {
-    const resolver = new Resolver<AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>, PaymentEvent>(
-      new SaveToDBHandler(),
-      new SendWebhookHandler(),
-      new SendEmailHandler()
-    );
+    const resolver = new Resolver<
+      AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>,
+      PaymentEvent
+    >(new SaveToDBHandler(), new SendWebhookHandler(), new SendEmailHandler());
 
     const event: PaymentEvent = {
       type: 'payment.succeeded',
       amount: 1000,
-      customerId: 'cus_123'
+      customerId: 'cus_123',
     };
 
     const startTime = Date.now();
@@ -102,14 +105,15 @@ describe('Async Handler Resolution - handleAllAsync()', () => {
   });
 
   it('should return empty array when no handlers match', async () => {
-    const resolver = new Resolver<AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>, PaymentEvent>(
-      new SaveToDBHandler()
-    );
+    const resolver = new Resolver<
+      AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>,
+      PaymentEvent
+    >(new SaveToDBHandler());
 
     const event: PaymentEvent = {
       type: 'refund.processed',
       amount: 500,
-      customerId: 'cus_456'
+      customerId: 'cus_456',
     };
 
     const results = await resolver.handleAllAsync(event, event);
@@ -127,15 +131,15 @@ describe('Async Handler Resolution - handleAllAsync()', () => {
       }
     }
 
-    const resolver = new Resolver<AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>, PaymentEvent>(
-      new SyncHandler(),
-      new SaveToDBHandler()
-    );
+    const resolver = new Resolver<
+      AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>,
+      PaymentEvent
+    >(new SyncHandler(), new SaveToDBHandler());
 
     const event: PaymentEvent = {
       type: 'payment.succeeded',
       amount: 1000,
-      customerId: 'cus_123'
+      customerId: 'cus_123',
     };
 
     const results = await resolver.handleAllAsync(event, event);
@@ -153,7 +157,7 @@ describe('Async Handler Resolution - handleAllSequential()', () => {
       }
 
       async handle(): Promise<string> {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         executionOrder.push('Handler1');
         return 'Handler1';
       }
@@ -165,7 +169,7 @@ describe('Async Handler Resolution - handleAllSequential()', () => {
       }
 
       async handle(): Promise<string> {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         executionOrder.push('Handler2');
         return 'Handler2';
       }
@@ -177,22 +181,21 @@ describe('Async Handler Resolution - handleAllSequential()', () => {
       }
 
       async handle(): Promise<string> {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         executionOrder.push('Handler3');
         return 'Handler3';
       }
     }
 
-    const resolver = new Resolver<AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>, PaymentEvent>(
-      new Handler1(),
-      new Handler2(),
-      new Handler3()
-    );
+    const resolver = new Resolver<
+      AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>,
+      PaymentEvent
+    >(new Handler1(), new Handler2(), new Handler3());
 
     const event: PaymentEvent = {
       type: 'payment.succeeded',
       amount: 1000,
-      customerId: 'cus_123'
+      customerId: 'cus_123',
     };
 
     const startTime = Date.now();
@@ -247,16 +250,15 @@ describe('Async Handler Resolution - handleAllSequential()', () => {
       }
     }
 
-    const resolver = new Resolver<AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>, PaymentEvent>(
-      new SuccessHandler(),
-      new ErrorHandler(),
-      new NeverExecutedHandler()
-    );
+    const resolver = new Resolver<
+      AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>,
+      PaymentEvent
+    >(new SuccessHandler(), new ErrorHandler(), new NeverExecutedHandler());
 
     const event: PaymentEvent = {
       type: 'payment.succeeded',
       amount: 1000,
-      customerId: 'cus_123'
+      customerId: 'cus_123',
     };
 
     await expect(resolver.handleAllSequential(event, event)).rejects.toThrow('Handler failed');
@@ -272,27 +274,29 @@ describe('Async with Priority', () => {
       PrioritizedAsyncResolveTarget<[PaymentEvent], any, PaymentEvent>,
       PaymentEvent
     >(
-      new ProcessPaymentHandler(),  // priority: 50
-      new ValidationHandler()       // priority: 100
+      new ProcessPaymentHandler(), // priority: 50
+      new ValidationHandler() // priority: 100
     );
 
     const event: PaymentEvent = {
       type: 'payment.succeeded',
       amount: 1000,
-      customerId: 'cus_123'
+      customerId: 'cus_123',
     };
 
     const results = await resolver.handleAllAsync(event, event);
 
     expect(results).toHaveLength(2);
-    expect(results[0]).toBe(true);                      // ValidationHandler (priority: 100)
-    expect(results[1]).toBe('Processed payment 1000');  // ProcessPaymentHandler (priority: 50)
+    expect(results[0]).toBe(true); // ValidationHandler (priority: 100)
+    expect(results[1]).toBe('Processed payment 1000'); // ProcessPaymentHandler (priority: 50)
   });
 
   it('should execute async handlers sequentially in priority order', async () => {
     const executionOrder: string[] = [];
 
-    class HighPriority implements PrioritizedAsyncResolveTarget<[PaymentEvent], string, PaymentEvent> {
+    class HighPriority
+      implements PrioritizedAsyncResolveTarget<[PaymentEvent], string, PaymentEvent>
+    {
       priority = 100;
 
       supports(event: PaymentEvent): boolean {
@@ -300,13 +304,15 @@ describe('Async with Priority', () => {
       }
 
       async handle(): Promise<string> {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         executionOrder.push('High');
         return 'High';
       }
     }
 
-    class LowPriority implements PrioritizedAsyncResolveTarget<[PaymentEvent], string, PaymentEvent> {
+    class LowPriority
+      implements PrioritizedAsyncResolveTarget<[PaymentEvent], string, PaymentEvent>
+    {
       priority = 10;
 
       supports(event: PaymentEvent): boolean {
@@ -314,7 +320,7 @@ describe('Async with Priority', () => {
       }
 
       async handle(): Promise<string> {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         executionOrder.push('Low');
         return 'Low';
       }
@@ -324,14 +330,14 @@ describe('Async with Priority', () => {
       PrioritizedAsyncResolveTarget<[PaymentEvent], string, PaymentEvent>,
       PaymentEvent
     >(
-      new LowPriority(),   // priority: 10
-      new HighPriority()   // priority: 100
+      new LowPriority(), // priority: 10
+      new HighPriority() // priority: 100
     );
 
     const event: PaymentEvent = {
       type: 'payment.succeeded',
       amount: 1000,
-      customerId: 'cus_123'
+      customerId: 'cus_123',
     };
 
     await resolver.handleAllSequential(event, event);
@@ -363,15 +369,15 @@ describe('Async Error Handling', () => {
       }
     }
 
-    const resolver = new Resolver<AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>, PaymentEvent>(
-      new SuccessHandler(),
-      new ErrorHandler()
-    );
+    const resolver = new Resolver<
+      AsyncResolveTarget<[PaymentEvent], string, PaymentEvent>,
+      PaymentEvent
+    >(new SuccessHandler(), new ErrorHandler());
 
     const event: PaymentEvent = {
       type: 'payment.succeeded',
       amount: 1000,
-      customerId: 'cus_123'
+      customerId: 'cus_123',
     };
 
     // Promise.allなので、どれか1つでもエラーがあると全体が失敗する

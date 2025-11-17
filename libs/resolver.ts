@@ -1,10 +1,13 @@
-import { ResolveTarget } from './interface'
+import type { ResolveTarget } from './interface';
 
 /**
  * Resolver class implementing the Chain of Responsibility pattern
  * Resolves handlers for specific types
  */
-class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[], any, any>, TType = string> {
+class Resolver<
+  TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[], any, any>,
+  TType = string,
+> {
   /**
    * Array of registered resolver targets
    * @private
@@ -82,9 +85,7 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
    */
   private getPriority(handler: TBase): number {
     const handlerWithPriority = handler as Partial<{ priority: number }>;
-    return typeof handlerWithPriority.priority === 'number'
-      ? handlerWithPriority.priority
-      : 0;
+    return typeof handlerWithPriority.priority === 'number' ? handlerWithPriority.priority : 0;
   }
 
   /**
@@ -114,7 +115,7 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
     }
 
     // Get all matching handlers and sort by priority
-    const matchingHandlers = this.updaters.filter(updater => updater.supports(type));
+    const matchingHandlers = this.updaters.filter((updater) => updater.supports(type));
     const sortedHandlers = this.sortByPriority(matchingHandlers);
     const target = sortedHandlers[0];
 
@@ -123,14 +124,15 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
       if (this.fallbackHandler) {
         return {
           supports: () => true,
-          handle: this.fallbackHandler
+          handle: this.fallbackHandler,
         } as unknown as TBase;
       }
 
       // Determine the string representation of the unsupported type
       // If it's a non-null object, use JSON.stringify for detailed output
       // Otherwise, use String() for basic conversion
-      const typeString = typeof type === 'object' && type !== null ? JSON.stringify(type) : String(type);
+      const typeString =
+        typeof type === 'object' && type !== null ? JSON.stringify(type) : String(type);
       throw new Error(`Unsupported type: ${typeString}`);
     }
 
@@ -150,15 +152,17 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
       throw new Error('Unassigned resolve target.');
     }
 
-    const targets = this.updaters.filter(updater => updater.supports(type));
+    const targets = this.updaters.filter((updater) => updater.supports(type));
 
     if (targets.length === 0) {
       // If fallback handler is set, return it as a single-element array
       if (this.fallbackHandler) {
-        return [{
-          supports: () => true,
-          handle: this.fallbackHandler
-        } as unknown as TBase];
+        return [
+          {
+            supports: () => true,
+            handle: this.fallbackHandler,
+          } as unknown as TBase,
+        ];
       }
 
       // Return empty array if no handlers match
@@ -176,9 +180,12 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
    * @returns Array of results from all matching handlers
    * @throws {Error} When no resolver targets are registered
    */
-  public handleAll(type: TType, ...args: Parameters<TBase['handle']>): ReturnType<TBase['handle']>[] {
+  public handleAll(
+    type: TType,
+    ...args: Parameters<TBase['handle']>
+  ): ReturnType<TBase['handle']>[] {
     const targets = this.resolveAll(type);
-    return targets.map(target => target.handle(...args));
+    return targets.map((target) => target.handle(...args));
   }
 
   /**
@@ -193,7 +200,7 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
     ...args: Parameters<TBase['handle']>
   ): Promise<Awaited<ReturnType<TBase['handle']>>[]> {
     const targets = this.resolveAll(type);
-    const promises = targets.map(target => target.handle(...args));
+    const promises = targets.map((target) => target.handle(...args));
     return Promise.all(promises);
   }
 

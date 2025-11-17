@@ -1,5 +1,5 @@
+import type { PrioritizedResolveTarget, ResolveTarget } from '../libs/interface';
 import Resolver from '../libs/resolver';
-import { ResolveTarget, PrioritizedResolveTarget } from '../libs/interface';
 
 // Webhook処理の典型的なパターン: Validation → Business Logic → Logging
 interface WebhookEvent {
@@ -21,7 +21,9 @@ class ValidationHandler implements PrioritizedResolveTarget<[WebhookEvent], stri
 }
 
 // 優先度: 50 - ビジネスロジック
-class BusinessLogicHandler implements PrioritizedResolveTarget<[WebhookEvent], string, WebhookEvent> {
+class BusinessLogicHandler
+  implements PrioritizedResolveTarget<[WebhookEvent], string, WebhookEvent>
+{
   priority = 50;
 
   supports(event: WebhookEvent): boolean {
@@ -63,44 +65,45 @@ describe('Priority-based Handler Resolution', () => {
       PrioritizedResolveTarget<[WebhookEvent], string, WebhookEvent>,
       WebhookEvent
     >(
-      new LoggingHandler(),        // priority: 10
-      new BusinessLogicHandler(),  // priority: 50
-      new ValidationHandler()      // priority: 100
+      new LoggingHandler(), // priority: 10
+      new BusinessLogicHandler(), // priority: 50
+      new ValidationHandler() // priority: 100
     );
 
     const event: WebhookEvent = {
       type: 'payment.created',
-      data: { amount: 1000 }
+      data: { amount: 1000 },
     };
 
     const results = resolver.handleAll(event, event);
 
     expect(results).toHaveLength(3);
-    expect(results[0]).toBe('STEP1: Validation');      // priority: 100
-    expect(results[1]).toBe('STEP2: Business Logic');  // priority: 50
-    expect(results[2]).toBe('STEP3: Logging');         // priority: 10
+    expect(results[0]).toBe('STEP1: Validation'); // priority: 100
+    expect(results[1]).toBe('STEP2: Business Logic'); // priority: 50
+    expect(results[2]).toBe('STEP3: Logging'); // priority: 10
   });
 
   it('should handle handlers without priority as lowest priority (0)', () => {
     const resolver = new Resolver<
-      ResolveTarget<[WebhookEvent], string, WebhookEvent> | PrioritizedResolveTarget<[WebhookEvent], string, WebhookEvent>,
+      | ResolveTarget<[WebhookEvent], string, WebhookEvent>
+      | PrioritizedResolveTarget<[WebhookEvent], string, WebhookEvent>,
       WebhookEvent
     >(
-      new DefaultHandler(),        // no priority (treated as 0)
-      new ValidationHandler(),     // priority: 100
-      new LoggingHandler()         // priority: 10
+      new DefaultHandler(), // no priority (treated as 0)
+      new ValidationHandler(), // priority: 100
+      new LoggingHandler() // priority: 10
     );
 
     const event: WebhookEvent = {
       type: 'payment.created',
-      data: { amount: 1000 }
+      data: { amount: 1000 },
     };
 
     const results = resolver.handleAll(event, event);
 
     expect(results).toHaveLength(3);
-    expect(results[0]).toBe('STEP1: Validation');           // priority: 100
-    expect(results[1]).toBe('STEP3: Logging');              // priority: 10
+    expect(results[0]).toBe('STEP1: Validation'); // priority: 100
+    expect(results[1]).toBe('STEP3: Logging'); // priority: 10
     expect(results[2]).toBe('STEP4: Default (no priority)'); // priority: 0 (default)
   });
 
@@ -138,15 +141,11 @@ describe('Priority-based Handler Resolution', () => {
     const resolver = new Resolver<
       PrioritizedResolveTarget<[WebhookEvent], string, WebhookEvent>,
       WebhookEvent
-    >(
-      new Handler1(),
-      new Handler2(),
-      new Handler3()
-    );
+    >(new Handler1(), new Handler2(), new Handler3());
 
     const event: WebhookEvent = {
       type: 'test',
-      data: {}
+      data: {},
     };
 
     const results = resolver.handleAll(event, event);
@@ -162,14 +161,14 @@ describe('Priority-based Handler Resolution', () => {
       PrioritizedResolveTarget<[WebhookEvent], string, WebhookEvent>,
       WebhookEvent
     >(
-      new LoggingHandler(),        // priority: 10
-      new ValidationHandler(),     // priority: 100
-      new BusinessLogicHandler()   // priority: 50
+      new LoggingHandler(), // priority: 10
+      new ValidationHandler(), // priority: 100
+      new BusinessLogicHandler() // priority: 50
     );
 
     const event: WebhookEvent = {
       type: 'payment.created',
-      data: { amount: 1000 }
+      data: { amount: 1000 },
     };
 
     // resolve()は最初にマッチしたものを返すのではなく、最優先のものを返す
@@ -203,21 +202,18 @@ describe('Priority-based Handler Resolution', () => {
     const resolver = new Resolver<
       PrioritizedResolveTarget<[WebhookEvent], string, WebhookEvent>,
       WebhookEvent
-    >(
-      new CleanupHandler(),
-      new NormalHandler()
-    );
+    >(new CleanupHandler(), new NormalHandler());
 
     const event: WebhookEvent = {
       type: 'test',
-      data: {}
+      data: {},
     };
 
     const results = resolver.handleAll(event, event);
 
     expect(results).toHaveLength(2);
-    expect(results[0]).toBe('Normal');           // priority: 50
-    expect(results[1]).toBe('Cleanup (last)');   // priority: -10
+    expect(results[0]).toBe('Normal'); // priority: 50
+    expect(results[1]).toBe('Cleanup (last)'); // priority: -10
   });
 });
 
@@ -228,13 +224,13 @@ describe('Priority with addUpdater and setUpdaters', () => {
       WebhookEvent
     >();
 
-    resolver.addUpdater(new LoggingHandler());        // priority: 10
-    resolver.addUpdater(new ValidationHandler());     // priority: 100
-    resolver.addUpdater(new BusinessLogicHandler());  // priority: 50
+    resolver.addUpdater(new LoggingHandler()); // priority: 10
+    resolver.addUpdater(new ValidationHandler()); // priority: 100
+    resolver.addUpdater(new BusinessLogicHandler()); // priority: 50
 
     const event: WebhookEvent = {
       type: 'payment.created',
-      data: { amount: 1000 }
+      data: { amount: 1000 },
     };
 
     const results = resolver.handleAll(event, event);
@@ -252,14 +248,14 @@ describe('Priority with addUpdater and setUpdaters', () => {
     >();
 
     resolver.setUpdaters(
-      new LoggingHandler(),        // priority: 10
-      new ValidationHandler(),     // priority: 100
-      new BusinessLogicHandler()   // priority: 50
+      new LoggingHandler(), // priority: 10
+      new ValidationHandler(), // priority: 100
+      new BusinessLogicHandler() // priority: 50
     );
 
     const event: WebhookEvent = {
       type: 'payment.created',
-      data: { amount: 1000 }
+      data: { amount: 1000 },
     };
 
     const results = resolver.handleAll(event, event);
