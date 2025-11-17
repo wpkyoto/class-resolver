@@ -1,6 +1,6 @@
 {
   "name": "class-resolver",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "Simple class resolver.",
   "type": "module",
   "main": "dist/index.cjs",
@@ -18,7 +18,9 @@
       }
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "test": "vitest run",
@@ -31,7 +33,11 @@
     "prepublishOnly": "npm run build",
     "release": "np"
   },
-  "keywords": ["resolver", "chain-of-responsibility", "typescript"],
+  "keywords": [
+    "resolver",
+    "chain-of-responsibility",
+    "typescript"
+  ],
   "author": "Hidetaka Okamoto <info@wp-kyoto.net> (https://wp-kyoto.net)",
   "license": "MIT",
   "devDependencies": {
