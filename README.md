@@ -255,7 +255,43 @@ This advanced type support allows you to:
 - Handle domain-specific objects like Stripe events, database records, or custom business objects
 - Create more expressive and type-safe event handling systems
 
-## New Features (v3.0.0)
+## Breaking Changes in v3.0.0
+
+### `resolve()` Method Behavior Change
+
+**Important**: The `resolve()` method now returns the **highest priority handler** instead of the first matching handler based on registration order.
+
+#### Before (v2.x)
+```typescript
+const resolver = new Resolver(handler1, handler2, handler3);
+const result = resolver.resolve('type'); // Returns handler1 (first registered)
+```
+
+#### After (v3.0.0)
+```typescript
+// Without priority - behavior unchanged (returns first matching handler)
+const resolver = new Resolver(handler1, handler2, handler3);
+const result = resolver.resolve('type'); // Still returns handler1
+
+// With priority - returns highest priority handler
+class HighPriority implements PrioritizedResolveTarget {
+  priority = 100;
+  // ...
+}
+class LowPriority implements PrioritizedResolveTarget {
+  priority = 10;
+  // ...
+}
+
+const resolver = new Resolver(lowPriority, highPriority);
+const result = resolver.resolve('type'); // Returns highPriority (priority: 100)
+```
+
+**Migration Guide**: If you rely on registration order and don't want priority-based resolution:
+- Continue using handlers without the `priority` property - they will maintain registration order (all have default priority of 0)
+- Or explicitly set the same priority on all handlers to maintain registration order
+
+## New Features in v3.0.0
 
 ### Multiple Handler Execution
 

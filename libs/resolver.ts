@@ -81,8 +81,9 @@ class Resolver<TBase extends ResolveTarget<any[], any, any> = ResolveTarget<any[
    * @private
    */
   private getPriority(handler: TBase): number {
-    return 'priority' in handler && typeof (handler as any).priority === 'number'
-      ? (handler as any).priority
+    const handlerWithPriority = handler as Partial<{ priority: number }>;
+    return typeof handlerWithPriority.priority === 'number'
+      ? handlerWithPriority.priority
       : 0;
   }
 
