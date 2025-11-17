@@ -1,6 +1,6 @@
 {
   "name": "class-resolver",
-  "version": "3.0.0",
+  "version": "2.2.0",
   "description": "Simple class resolver.",
   "type": "module",
   "main": "dist/index.cjs",
