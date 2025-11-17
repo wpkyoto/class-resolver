@@ -12,6 +12,9 @@ A lightweight TypeScript/JavaScript library for implementing the Chain of Respon
 - Generic type support for better type safety
 - **Fallback handler support for graceful handling of unsupported types**
 - **Method chaining support for fluent API usage**
+- **🎯 NEW: Multiple handler execution (resolveAll, handleAll)**
+- **🎯 NEW: Priority-based handler resolution**
+- **🎯 NEW: Async handler support (handleAllAsync, handleAllSequential)**
 
 ## Installation
 
@@ -252,21 +255,268 @@ This advanced type support allows you to:
 - Handle domain-specific objects like Stripe events, database records, or custom business objects
 - Create more expressive and type-safe event handling systems
 
+## Breaking Changes in v3.0.0
+
+### `resolve()` Method Behavior Change
+
+**Important**: The `resolve()` method now returns the **highest priority handler** instead of the first matching handler based on registration order.
+
+#### Before (v2.x)
+```typescript
+const resolver = new Resolver(handler1, handler2, handler3);
+const result = resolver.resolve('type'); // Returns handler1 (first registered)
+```
+
+#### After (v3.0.0)
+```typescript
+// Without priority - behavior unchanged (returns first matching handler)
+const resolver = new Resolver(handler1, handler2, handler3);
+const result = resolver.resolve('type'); // Still returns handler1
+
+// With priority - returns highest priority handler
+class HighPriority implements PrioritizedResolveTarget {
+  priority = 100;
+  // ...
+}
+class LowPriority implements PrioritizedResolveTarget {
+  priority = 10;
+  // ...
+}
+
+const resolver = new Resolver(lowPriority, highPriority);
+const result = resolver.resolve('type'); // Returns highPriority (priority: 100)
+```
+
+**Migration Guide**: If you rely on registration order and don't want priority-based resolution:
+- Continue using handlers without the `priority` property - they will maintain registration order (all have default priority of 0)
+- Or explicitly set the same priority on all handlers to maintain registration order
+
+## New Features in v3.0.0
+
+### Multiple Handler Execution
+
+Execute all matching handlers for a single event type. Perfect for webhook fanout patterns where one event needs multiple processors.
+
+```typescript
+import Resolver from 'class-resolver';
+import { ResolveTarget } from 'class-resolver';
+
+interface StripeEvent {
+  type: string;
+  data: { amount: number };
+}
+
+class AccountingHandler implements ResolveTarget<[StripeEvent], string, StripeEvent> {
+  supports(event: StripeEvent): boolean {
+    return event.type === 'payment.succeeded';
+  }
+  handle(event: StripeEvent): string {
+    return `Accounting: Recorded ${event.data.amount}`;
+  }
+}
+
+class EmailHandler implements ResolveTarget<[StripeEvent], string, StripeEvent> {
+  supports(event: StripeEvent): boolean {
+    return event.type === 'payment.succeeded';
+  }
+  handle(event: StripeEvent): string {
+    return `Email: Sent confirmation for ${event.data.amount}`;
+  }
+}
+
+class AnalyticsHandler implements ResolveTarget<[StripeEvent], string, StripeEvent> {
+  supports(event: StripeEvent): boolean {
+    return event.type === 'payment.succeeded';
+  }
+  handle(event: StripeEvent): string {
+    return `Analytics: Logged ${event.data.amount}`;
+  }
+}
+
+const resolver = new Resolver<ResolveTarget<[StripeEvent], string, StripeEvent>, StripeEvent>(
+  new AccountingHandler(),
+  new EmailHandler(),
+  new AnalyticsHandler()
+);
+
+const event: StripeEvent = {
+  type: 'payment.succeeded',
+  data: { amount: 1000 }
+};
+
+// Execute ALL matching handlers
+const results = resolver.handleAll(event, event);
+// Results: [
+//   'Accounting: Recorded 1000',
+//   'Email: Sent confirmation for 1000',
+//   'Analytics: Logged 1000'
+// ]
+
+// Or get all matching handlers
+const handlers = resolver.resolveAll(event);
+// handlers.length === 3
+```
+
+### Priority-Based Handler Resolution
+
+Control execution order with priority levels. Higher priority handlers execute first.
+
+```typescript
+import { PrioritizedResolveTarget } from 'class-resolver';
+
+class ValidationHandler implements PrioritizedResolveTarget<[any], boolean, string> {
+  priority = 100;  // Highest priority
+
+  supports(type: string): boolean {
+    return type === 'webhook';
+  }
+
+  handle(data: any): boolean {
+    return data !== null && data !== undefined;
+  }
+}
+
+class BusinessLogicHandler implements PrioritizedResolveTarget<[any], string, string> {
+  priority = 50;  // Medium priority
+
+  supports(type: string): boolean {
+    return type === 'webhook';
+  }
+
+  handle(data: any): string {
+    return `Processed: ${JSON.stringify(data)}`;
+  }
+}
+
+class LoggingHandler implements PrioritizedResolveTarget<[any], void, string> {
+  priority = 10;  // Lowest priority
+
+  supports(type: string): boolean {
+    return type === 'webhook';
+  }
+
+  handle(data: any): void {
+    console.log(`Logged: ${JSON.stringify(data)}`);
+  }
+}
+
+const resolver = new Resolver<PrioritizedResolveTarget<[any], any, string>, string>(
+  new LoggingHandler(),      // Registered third
+  new ValidationHandler(),   // Registered first
+  new BusinessLogicHandler() // Registered second
+);
+
+// Handlers execute in PRIORITY order (not registration order):
+// 1. ValidationHandler (priority: 100)
+// 2. BusinessLogicHandler (priority: 50)
+// 3. LoggingHandler (priority: 10)
+const results = resolver.handleAll('webhook', { test: true });
+```
+
+### Async Handler Support
+
+Execute async handlers in parallel or sequentially.
+
+```typescript
+import { AsyncResolveTarget } from 'class-resolver';
+
+class SaveToDBHandler implements AsyncResolveTarget<[any], string, string> {
+  supports(type: string): boolean {
+    return type === 'payment';
+  }
+
+  async handle(data: any): Promise<string> {
+    // Simulate DB save
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return 'Saved to DB';
+  }
+}
+
+class SendWebhookHandler implements AsyncResolveTarget<[any], string, string> {
+  supports(type: string): boolean {
+    return type === 'payment';
+  }
+
+  async handle(data: any): Promise<string> {
+    // Simulate external API call
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return 'Webhook sent';
+  }
+}
+
+const resolver = new Resolver<AsyncResolveTarget<[any], string, string>, string>(
+  new SaveToDBHandler(),
+  new SendWebhookHandler()
+);
+
+// Execute handlers in PARALLEL (fastest)
+const results = await resolver.handleAllAsync('payment', { amount: 1000 });
+// Results: ['Saved to DB', 'Webhook sent']
+// Total time: ~200ms (not 300ms)
+
+// Or execute SEQUENTIALLY (ordered, stops on error)
+const results2 = await resolver.handleAllSequential('payment', { amount: 1000 });
+// Results: ['Saved to DB', 'Webhook sent']
+// Total time: ~300ms
+```
+
+### Priority + Async Combined
+
+```typescript
+import { PrioritizedAsyncResolveTarget } from 'class-resolver';
+
+class ValidationHandler implements PrioritizedAsyncResolveTarget<[any], boolean, string> {
+  priority = 100;
+
+  supports(type: string): boolean {
+    return type === 'order';
+  }
+
+  async handle(data: any): Promise<boolean> {
+    // Async validation
+    return data.amount > 0;
+  }
+}
+
+class ProcessHandler implements PrioritizedAsyncResolveTarget<[any], string, string> {
+  priority = 50;
+
+  supports(type: string): boolean {
+    return type === 'order';
+  }
+
+  async handle(data: any): Promise<string> {
+    return `Processed order ${data.id}`;
+  }
+}
+
+const resolver = new Resolver<PrioritizedAsyncResolveTarget<[any], any, string>, string>(
+  new ProcessHandler(),    // priority: 50
+  new ValidationHandler()  // priority: 100
+);
+
+// Executes in priority order: Validation → Process
+const results = await resolver.handleAllAsync('order', { id: 123, amount: 1000 });
+// Results: [true, 'Processed order 123']
+```
+
 ## Use Cases
 
-1. **Command Pattern Implementation**: Handle different types of commands with specific handlers
-2. **Format Conversion**: Convert data between different formats based on type
-3. **Request Processing**: Process different types of requests with dedicated handlers
-4. **Plugin System**: Implement a plugin system where different plugins handle specific types of operations
-5. **Message Formatting**: Format different types of messages with specific formatters
-6. **Graceful Degradation**: Use fallback handlers to provide default behavior for unknown types
-7. **API Versioning**: Handle different API versions with fallback to backward-compatible behavior
-8. **Feature Flags**: Implement feature flags with fallback to basic functionality
+1. **Webhook Fanout**: Process a single webhook event with multiple handlers (accounting, notifications, analytics)
+2. **Event-Driven Architecture**: Route events to multiple subscribers based on event type
+3. **Command Pattern Implementation**: Handle different types of commands with specific handlers
+4. **Validation Pipeline**: Execute validation, business logic, and logging in priority order
+5. **Async Workflows**: Coordinate multiple async operations (DB saves, API calls, file operations)
+6. **Plugin System**: Implement a plugin system where different plugins handle specific types of operations
+7. **Message Formatting**: Format different types of messages with specific formatters
+8. **Graceful Degradation**: Use fallback handlers to provide default behavior for unknown types
+9. **API Versioning**: Handle different API versions with fallback to backward-compatible behavior
+10. **LINE Bot / Discord Bot**: Route different message types to appropriate handlers
 
 ## Error Handling
 
 The resolver will throw errors in the following cases:
-- When no resolvers are registered: `"Unasigned resolve target."`
+- When no resolvers are registered: `"Unassigned resolve target."`
 - When trying to resolve an unsupported type: `"Unsupported type: xxx"`
 
 ### Fallback Handler for Error Prevention
