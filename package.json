@@ -18,11 +18,10 @@
       }
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "vite build",
+    "verify-build": "node scripts/verify-build.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -33,11 +32,7 @@
     "prepublishOnly": "npm run build",
     "release": "np"
   },
-  "keywords": [
-    "resolver",
-    "chain-of-responsibility",
-    "typescript"
-  ],
+  "keywords": ["resolver", "chain-of-responsibility", "typescript"],
   "author": "Hidetaka Okamoto <info@wp-kyoto.net> (https://wp-kyoto.net)",
   "license": "MIT",
   "devDependencies": {

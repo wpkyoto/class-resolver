@@ -16,6 +16,9 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [],
+      output: {
+        exports: 'default',
+      },
     },
     sourcemap: true,
     outDir: 'dist',
@@ -26,6 +29,7 @@ export default defineConfig({
       exclude: ['__tests__/**', 'node_modules/**'],
       outDir: 'dist',
       rollupTypes: true,
+      insertTypesEntry: true,
     }),
   ],
 });
